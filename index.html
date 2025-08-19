@@ -1,0 +1,58 @@
+<html>
+  <head>
+    <script src="https://apps.8thwall.com/xrweb"></script>
+    <script src="https://aframe.io/releases/1.4.1/aframe.min.js"></script>
+  </head>
+  <body>
+    <a-scene
+      xrweb
+      xrmap
+      xrmap-auto-scan
+      renderer="colorManagement: true"
+      embedded
+    >
+      <a-entity id="pipeParent"></a-entity>
+    </a-scene>
+
+    <script>
+      // Define start and end GPS coordinates
+      const start = { lat: 23.0118, lon: 72.5085 };
+      const end   = { lat: 23.0143, lon: 72.5120 };
+
+      // Convert lat/lon to meters (simple equirectangular approx)
+      function latLonToMeters(lat, lon) {
+        const R = 6378137; // Earth radius in meters
+        const x = (lon * Math.PI / 180) * R * Math.cos(lat * Math.PI / 180);
+        const y = (lat * Math.PI / 180) * R;
+        return {x, y};
+      }
+
+      function placePipe() {
+        const startM = latLonToMeters(start.lat, start.lon);
+        const endM   = latLonToMeters(end.lat, end.lon);
+
+        // Vector difference
+        const dx = endM.x - startM.x;
+        const dz = endM.y - startM.y;
+        const distance = Math.sqrt(dx*dx + dz*dz);
+
+        // Midpoint for placement
+        const midX = (startM.x + endM.x) / 2;
+        const midZ = (startM.y + endM.y) / 2;
+
+        // Create a cylinder (pipe)
+        const pipe = document.createElement("a-cylinder");
+        pipe.setAttribute("radius", 0.05);
+        pipe.setAttribute("height", distance);
+        pipe.setAttribute("color", "red");
+        pipe.setAttribute("position", `${midX} 0 ${-midZ}`); // Note: Z flipped for A-Frame coords
+        pipe.setAttribute("rotation", `0 ${Math.atan2(dx, dz) * 180 / Math.PI} 90`);
+
+        document.querySelector("#pipeParent").appendChild(pipe);
+      }
+
+      // Call after scene loaded
+      document.querySelector("a-scene").addEventListener("loaded", placePipe);
+    </script>
+  </body>
+</html>
